@@ -206,7 +206,7 @@
 
 <div id="dashboardApp" style="display:none;">
 
-<header class="max-w-4xl mx-auto px-4 pt-8 pb-4">
+<header class="w-full max-w-[1760px] mx-auto px-4 sm:px-6 lg:px-10 pt-8 pb-4">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <div class="w-11 h-11 rounded-2xl header-icon-badge flex items-center justify-center shrink-0 shadow-sm">
@@ -228,8 +228,9 @@
 </nav>
 </header>
 
-<main class="max-w-4xl mx-auto px-4 space-y-4">
+<main class="w-full max-w-[1760px] mx-auto px-4 sm:px-6 lg:px-10 space-y-4">
 
+  <div class="grid gap-4 lg:grid-cols-2 items-stretch">
   <!-- ============================================================= -->
   <!-- เลือกช่วงเวลา -->
   <!-- ============================================================= -->
@@ -286,19 +287,20 @@
   <!-- สรุปตัวเลขของช่วงที่เลือก -->
   <!-- ============================================================= -->
   <section class="grid grid-cols-3 gap-3">
-    <div class="card rounded-2xl shadow-soft p-4 text-center">
+    <div class="card rounded-2xl shadow-soft p-4 text-center flex flex-col justify-center">
       <div class="text-xs text-muted mb-1">🧾 รายการ</div>
       <div id="statCount" class="text-lg font-bold text-bark">0</div>
     </div>
-    <div class="card rounded-2xl shadow-soft p-4 text-center">
+    <div class="card rounded-2xl shadow-soft p-4 text-center flex flex-col justify-center">
       <div class="text-xs text-muted mb-1">📦 เบิกรวม</div>
       <div id="statDispensed" class="text-lg font-bold text-clayD">0</div>
     </div>
-    <div class="card rounded-2xl shadow-soft p-4 text-center">
+    <div class="card rounded-2xl shadow-soft p-4 text-center flex flex-col justify-center">
       <div class="text-xs text-muted mb-1">♻️ คืนรวม</div>
       <div id="statReturned" class="text-lg font-bold text-teal">0</div>
     </div>
   </section>
+  </div>
 
   <!-- ============================================================= -->
   <!-- ตารางรายการ -->
@@ -315,7 +317,7 @@
     </div>
 
     <div class="overflow-x-auto -mx-1">
-      <table class="min-w-[900px] w-full text-xs">
+      <table class="min-w-[900px] w-full text-xs lg:text-sm">
         <thead>
           <tr class="text-muted border-b border-sand">
             <th rowspan="2" class="px-2 py-2 align-bottom text-center"><input type="checkbox" id="selectAllChk" class="w-4 h-4 accent-orange-500" title="เลือกทั้งหมดในหน้านี้" aria-label="เลือกทั้งหมดในหน้านี้"></th>
@@ -906,7 +908,7 @@ function render() {
           ? `<img src="${esc(img)}" data-full="${esc(img)}" class="thumb-img w-9 h-9 rounded-lg object-cover border border-sandD cursor-pointer inline-block hover:opacity-80 transition-opacity" alt="รูปหลักฐาน">`
           : `<span class="text-muted">—</span>`}
       </td>
-      <td class="px-2 py-2.5 max-w-[160px] truncate text-muted" title="${esc(row.note)}">${esc(row.note) || '—'}</td>`;
+      <td class="px-2 py-2.5 max-w-[160px] xl:max-w-[320px] 2xl:max-w-[480px] truncate text-muted" title="${esc(row.note)}">${esc(row.note) || '—'}</td>`;
     rowsTableBody.appendChild(tr);
   });
 
