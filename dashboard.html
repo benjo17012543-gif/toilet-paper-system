@@ -393,7 +393,7 @@
     <p id="visMsg" class="hidden text-sm"></p>
 
     <div class="overflow-x-auto -mx-1">
-      <table class="w-full text-sm min-w-[560px]">
+      <table class="w-full text-sm min-w-[420px]">
         <thead id="visHead"></thead>
         <tbody id="visBody" class="divide-y divide-sand"></tbody>
       </table>
@@ -1584,7 +1584,7 @@ function renderVisitors() {
   if (visState.gran === 'month') {
     const year = Number(visYearSel.value);
     const rows = visState.visitors.filter((v) => v.year === year).sort((a, b) => a.month - b.month);
-    visHead.innerHTML = `<tr class="text-muted border-b border-sand">${visTh('เดือน', 'text-left')}${visTh('คนเข้าห้าง (คน)')}${visTh('📦 เบิก (ม้วน)')}${visTh('♻️ คืน (ม้วน)')}${visTh('🧮 เฉลี่ย คน/ม้วน')}<th class="no-print px-3 py-2 text-center font-medium">แก้ไข</th></tr>`;
+    visHead.innerHTML = `<tr class="text-muted border-b border-sand">${visTh('เดือน', 'text-left')}${visTh('คนเข้าห้าง (คน)')}${visTh('🧮 เฉลี่ย คน/ม้วน')}<th class="no-print px-3 py-2 text-center font-medium">แก้ไข</th></tr>`;
     if (!rows.length) {
       visEmpty.textContent = `ยังไม่มียอดคนเข้าห้างของปี ${year + 543} — เลือกเดือนแล้วกรอกจำนวนคนด้านบน`;
       visEmpty.classList.remove('hidden');
@@ -1597,8 +1597,6 @@ function renderVisitors() {
       html += `<tr class="hover:bg-amber-50/50">
         <td class="px-3 py-2.5 font-medium text-bark whitespace-nowrap">${VIS_MONTHS[v.month - 1]} ${v.year + 543}</td>
         <td class="px-3 py-2.5 text-right font-semibold">${fmtInt(v.visitors)}</td>
-        <td class="px-3 py-2.5 text-right text-clayD">${fmtInt(r.disp)}</td>
-        <td class="px-3 py-2.5 text-right text-sky-600">${fmtInt(r.ret)}</td>
         <td class="px-3 py-2.5 text-right font-bold text-gold">${fmtPerRoll(v.visitors, r.ret)}</td>
         <td class="no-print px-3 py-2.5 text-center whitespace-nowrap">
           <button type="button" class="vis-icon-btn vis-edit w-8 h-8 rounded-full border border-sandD bg-paper" data-y="${v.year}" data-m="${v.month}" title="แก้ไขยอดเดือนนี้" aria-label="แก้ไขยอดเดือนนี้">✏️</button>
@@ -1608,8 +1606,6 @@ function renderVisitors() {
     html += `<tr class="bg-amber-50/70 font-semibold">
       <td class="px-3 py-2.5 text-bark">รวมปี ${year + 543} (${rows.length} เดือน)</td>
       <td class="px-3 py-2.5 text-right">${fmtInt(sumV)}</td>
-      <td class="px-3 py-2.5 text-right text-clayD">${fmtInt(sumD)}</td>
-      <td class="px-3 py-2.5 text-right text-sky-600">${fmtInt(sumR)}</td>
       <td class="px-3 py-2.5 text-right text-gold">${fmtPerRoll(sumV, sumR)}</td>
       <td class="no-print"></td></tr>`;
   } else {
@@ -1620,7 +1616,7 @@ function renderVisitors() {
       a.months += 1; a.v += v.visitors; a.d += r.disp; a.r += r.ret;
     });
     const years = Object.keys(byYear).map(Number).sort((a, b) => b - a);
-    visHead.innerHTML = `<tr class="text-muted border-b border-sand">${visTh('ปี (พ.ศ.)', 'text-left')}${visTh('เดือนที่บันทึก')}${visTh('คนเข้าห้างรวม (คน)')}${visTh('📦 เบิก (ม้วน)')}${visTh('♻️ คืน (ม้วน)')}${visTh('🧮 เฉลี่ย คน/ม้วน')}<th class="no-print px-3 py-2 text-center font-medium">ดู</th></tr>`;
+    visHead.innerHTML = `<tr class="text-muted border-b border-sand">${visTh('ปี (พ.ศ.)', 'text-left')}${visTh('เดือนที่บันทึก')}${visTh('คนเข้าห้างรวม (คน)')}${visTh('🧮 เฉลี่ย คน/ม้วน')}<th class="no-print px-3 py-2 text-center font-medium">ดู</th></tr>`;
     if (!years.length) {
       visEmpty.textContent = 'ยังไม่มียอดคนเข้าห้างที่บันทึกไว้ — เลือกปีและเดือนแล้วกรอกจำนวนคนด้านบน';
       visEmpty.classList.remove('hidden');
@@ -1632,8 +1628,6 @@ function renderVisitors() {
         <td class="px-3 py-2.5 font-medium text-bark">${y + 543}</td>
         <td class="px-3 py-2.5 text-right">${a.months} / 12</td>
         <td class="px-3 py-2.5 text-right font-semibold">${fmtInt(a.v)}</td>
-        <td class="px-3 py-2.5 text-right text-clayD">${fmtInt(a.d)}</td>
-        <td class="px-3 py-2.5 text-right text-sky-600">${fmtInt(a.r)}</td>
         <td class="px-3 py-2.5 text-right font-bold text-gold">${fmtPerRoll(a.v, a.r)}</td>
         <td class="no-print px-3 py-2.5 text-center"><button type="button" class="vis-icon-btn vis-open-year rounded-full border border-sandD bg-paper px-3 py-1 text-xs" data-y="${y}">รายเดือน ›</button></td></tr>`;
     });
