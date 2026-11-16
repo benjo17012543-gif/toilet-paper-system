@@ -356,8 +356,8 @@
   <section class="card rounded-2xl shadow-soft p-5 no-print">
     <label class="text-sm font-medium text-bark mb-1.5 block">👥 ยอดคนเข้าห้างสรรพสินค้า (ช่วงเวลาที่เลือก)</label>
     <div class="flex gap-3 items-center">
-      <input id="mallVisitorsInput" type="number" min="0" step="1" inputmode="numeric" placeholder="กรอกจำนวนคน" class="flex-1 rounded-xl border border-sandD px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clay/40 focus:border-clay">
-      <button id="recalcVisitorsBtn" type="button" class="stepper-btn rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-sm font-medium px-4 py-2.5 shadow-md">🧮 คำนวณ</button>
+      <input id="mallVisitorsInput" type="number" min="0" step="1" inputmode="numeric" placeholder="กรอกจำนวนคน" class="flex-1 min-w-0 rounded-xl border border-sandD px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clay/40 focus:border-clay">
+      <button id="recalcVisitorsBtn" type="button" class="stepper-btn shrink-0 whitespace-nowrap rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-sm font-medium px-4 py-2.5 shadow-md">🧮 คำนวณและบันทึก</button>
     </div>
     <p class="text-xs text-muted mt-2">เฉลี่ย 1 ม้วน / คน = ยอดคนเข้าห้าง ÷ ม้วนคืนรวม (ม้วนที่ใช้จริงในช่วงเวลานี้)</p>
   </section>
@@ -384,7 +384,6 @@
         <label for="visMonthSel" class="text-xs text-muted mb-1 block">เดือน</label>
         <select id="visMonthSel" class="rounded-xl border border-sandD bg-paper px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-clay/40 focus:border-clay"></select>
       </div>
-      <button id="visSaveBtn" type="button" class="stepper-btn rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold px-4 py-2 shadow-md">💾 บันทึกยอดเดือนนี้</button>
     </div>
     <p id="visMsg" class="hidden text-sm"></p>
 
@@ -395,7 +394,7 @@
       </table>
     </div>
     <p id="visEmpty" class="hidden text-center text-sm text-muted py-6"></p>
-    <p class="text-xs text-muted">คนเข้าห้างของเดือนที่เลือก = ยอดจากช่องกรอกด้านบน (กด 💾 เพื่อบันทึก) · เฉลี่ย คน/ม้วน = ยอดคนเข้าห้าง ÷ ม้วนคืนรวมของเดือนนั้น · กดปากกา ✏️ เพื่อดึงยอดที่บันทึกไว้ไปแก้ในช่องด้านบน</p>
+    <p class="text-xs text-muted">คนเข้าห้างของเดือนที่เลือก = ยอดจากช่องกรอกด้านบน (กด 🧮 คำนวณและบันทึก ด้านบน) · เฉลี่ย คน/ม้วน = ยอดคนเข้าห้าง ÷ ม้วนคืนรวมของเดือนนั้น · กดปากกา ✏️ เพื่อดึงยอดที่บันทึกไว้ไปแก้ในช่องด้านบน</p>
   </section>
 
   <!-- ============================================================= -->
@@ -1465,7 +1464,7 @@ const visCountInput = document.getElementById('mallVisitorsInput');
 const visYearSel = document.getElementById('visYearSel');
 const visMonthSel = document.getElementById('visMonthSel');
 const visMonthWrap = document.getElementById('visMonthWrap');
-const visSaveBtn = document.getElementById('visSaveBtn');
+const visSaveBtn = document.getElementById('recalcVisitorsBtn');   // ปุ่มฟ้าด้านบน: คำนวณ + บันทึกยอดเดือนที่เลือก
 const visMsgEl = document.getElementById('visMsg');
 const visHead = document.getElementById('visHead');
 const visBody = document.getElementById('visBody');
@@ -1540,7 +1539,6 @@ function setVisGranUI(gran) {
     btn.classList.toggle('text-ink', !active);
   });
   visMonthWrap.classList.toggle('hidden', gran !== 'month');
-  visSaveBtn.classList.toggle('hidden', gran !== 'month');
   populateVisSelects();
 }
 
@@ -1669,11 +1667,14 @@ async function saveVisitors() {
   const raw = visCountInput.value.trim();
   const count = visDraftValue();
   if (raw === '' || count === null) {
-    visShowMsg(raw === '' ? 'กรอกจำนวนคนเข้าห้างในช่องด้านบนก่อน แล้วจึงกดบันทึก' : 'กรอกจำนวนคนเป็นเลขจำนวนเต็มตั้งแต่ 0 ขึ้นไป', true);
+    visShowMsg(raw === '' ? 'กรอกจำนวนคนเข้าห้างในช่องด้านบนก่อน แล้วจึงกดคำนวณและบันทึก' : 'กรอกจำนวนคนเป็นเลขจำนวนเต็มตั้งแต่ 0 ขึ้นไป', true);
     visCountInput.focus();
     return;
   }
+  if (visState.gran !== 'month') { visShowMsg('คำนวณแล้ว — ถ้าต้องการบันทึกเป็นยอดรายเดือน ให้สลับไปแท็บ "รายเดือน" ในการ์ดด้านล่าง เลือกปี/เดือน แล้วกด "คำนวณและบันทึก"', true); return; }
   const year = Number(visYearSel.value), month = Number(visMonthSel.value);
+  const existing = visState.visitors.find((v) => v.year === year && v.month === month);
+  if (existing && existing.visitors !== count && !confirm(`${VIS_MONTHS[month - 1]} ${year + 543} มียอดเดิม ${fmtInt(existing.visitors)} คน — แทนที่ด้วย ${fmtInt(count)} คน?`)) return;
   visSaveBtn.disabled = true;
   try {
     const res = await supaFetch(`${SUPABASE_URL}/rest/v1/${VISITORS_TABLE}?on_conflict=year,month`, {
@@ -1689,14 +1690,16 @@ async function saveVisitors() {
     const saved = await res.json();
     if (!saved.length) throw new Error('ฐานข้อมูลยังไม่อนุญาตให้บันทึก/แก้ไข (ต้องเพิ่ม policy ของตาราง toilet_paper_visitors — ดูไฟล์ visitors-table.sql)');
     await loadVisitorStats(false);
-    visShowMsg(`บันทึกแล้ว: ${VIS_MONTHS[month - 1]} ${year + 543} มีคนเข้าห้าง ${fmtInt(count)} คน`, false);
+    visShowMsg(`คำนวณและบันทึกแล้ว: ${VIS_MONTHS[month - 1]} ${year + 543} มีคนเข้าห้าง ${fmtInt(count)} คน`, false);
   } catch (err) {
     visShowMsg(err.message, true);
   } finally {
     visSaveBtn.disabled = false;
   }
 }
-visSaveBtn.addEventListener('click', saveVisitors);
+// ปุ่มฟ้า: คำนวณ (listener เดิม) แล้วบันทึกยอดลงเดือนที่เลือกในการ์ดนี้
+visSaveBtn.addEventListener('click', () => { if (visCountInput.value.trim() !== '') saveVisitors(); });
+visCountInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); visSaveBtn.click(); } });
 
 visBody.addEventListener('click', async (e) => {
   const edit = e.target.closest('.vis-edit');
@@ -1709,7 +1712,7 @@ visBody.addEventListener('click', async (e) => {
     visYearSel.value = String(y); visMonthSel.value = String(m);
     visCountInput.value = found ? String(found.visitors) : '';
     renderVisitors();
-    visShowMsg(`กำลังแก้ไข ${VIS_MONTHS[m - 1]} ${y + 543} — แก้จำนวนในช่องด้านบน แล้วกด "💾 บันทึกยอดเดือนนี้"`, false);
+    visShowMsg(`กำลังแก้ไข ${VIS_MONTHS[m - 1]} ${y + 543} — แก้จำนวนในช่องด้านบน แล้วกด "🧮 คำนวณและบันทึก"`, false);
     visCountInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     visCountInput.focus(); visCountInput.select();
   } else if (del) {
