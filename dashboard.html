@@ -355,10 +355,12 @@
   <!-- ============================================================= -->
   <section class="card rounded-2xl shadow-soft p-5 no-print">
     <label class="text-sm font-medium text-bark mb-1.5 block">👥 ยอดคนเข้าห้างสรรพสินค้า (ช่วงเวลาที่เลือก)</label>
-    <div class="flex gap-3 items-center">
-      <input id="mallVisitorsInput" type="number" min="0" placeholder="กรอกจำนวนคน" class="flex-1 rounded-xl border border-sandD px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clay/40 focus:border-clay">
+    <div class="flex flex-wrap gap-3 items-center">
+      <input id="mallVisitorsInput" type="number" min="0" step="1" inputmode="numeric" placeholder="กรอกจำนวนคน เช่น 250000" class="flex-1 min-w-[180px] rounded-xl border border-sandD px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clay/40 focus:border-clay">
       <button id="recalcVisitorsBtn" type="button" class="stepper-btn rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-sm font-medium px-4 py-2.5 shadow-md">🧮 คำนวณ</button>
+      <button id="visSaveBtn" type="button" class="stepper-btn rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold px-4 py-2.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">💾 บันทึก</button>
     </div>
+    <p id="visTarget" class="text-xs mt-2 text-clayD"></p>
     <p class="text-xs text-muted mt-2">เฉลี่ย 1 ม้วน / คน = ยอดคนเข้าห้าง ÷ ม้วนคืนรวม (ม้วนที่ใช้จริงในช่วงเวลานี้)</p>
   </section>
 
@@ -375,21 +377,6 @@
       </div>
     </div>
 
-    <form id="visForm" novalidate class="no-print grid grid-cols-2 sm:grid-cols-[1fr_1fr_1.6fr_auto] gap-2 items-end">
-      <div>
-        <label for="visYearSel" class="text-xs text-muted mb-1 block">ปี (พ.ศ.)</label>
-        <select id="visYearSel" class="w-full rounded-xl border border-sandD bg-paper px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clay/40 focus:border-clay"></select>
-      </div>
-      <div>
-        <label for="visMonthSel" class="text-xs text-muted mb-1 block">เดือน</label>
-        <select id="visMonthSel" class="w-full rounded-xl border border-sandD bg-paper px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clay/40 focus:border-clay"></select>
-      </div>
-      <div class="col-span-2 sm:col-span-1">
-        <label for="visCountInput" class="text-xs text-muted mb-1 block">จำนวนคนเข้าห้างทั้งเดือน (คน)</label>
-        <input id="visCountInput" type="number" min="0" step="1" inputmode="numeric" placeholder="เช่น 250000" class="w-full rounded-xl border border-sandD px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clay/40 focus:border-clay">
-      </div>
-      <button id="visSaveBtn" type="submit" class="stepper-btn col-span-2 sm:col-span-1 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold px-5 py-2.5 shadow-md">💾 บันทึก</button>
-    </form>
     <p id="visMsg" class="hidden text-sm"></p>
 
     <div class="overflow-x-auto -mx-1">
@@ -1464,10 +1451,8 @@ resetBtn.addEventListener('click', () => {
 const VISITORS_TABLE = 'toilet_paper_visitors';
 const VIS_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const visState = { gran: 'month', visitors: [], rolls: {}, tableMissing: false };
-const visForm = document.getElementById('visForm');
-const visYearSel = document.getElementById('visYearSel');
-const visMonthSel = document.getElementById('visMonthSel');
-const visCountInput = document.getElementById('visCountInput');
+const visCountInput = document.getElementById('mallVisitorsInput');   // ช่องกรอกด้านบน ใช้ทั้งคำนวณและบันทึก
+const visTargetEl = document.getElementById('visTarget');
 const visSaveBtn = document.getElementById('visSaveBtn');
 const visMsgEl = document.getElementById('visMsg');
 const visHead = document.getElementById('visHead');
@@ -1494,29 +1479,6 @@ async function supaSelectAll(table, queryString) {
   return out;
 }
 
-function populateVisSelects() {
-  const cur = new Date();
-  const years = new Set();
-  for (let y = cur.getFullYear() + 1; y >= cur.getFullYear() - 6; y--) years.add(y);
-  visState.visitors.forEach((v) => years.add(v.year));
-  const keep = visYearSel.value;
-  visYearSel.innerHTML = '';
-  [...years].sort((a, b) => b - a).forEach((y) => {
-    const o = document.createElement('option');
-    o.value = String(y); o.textContent = String(y + 543);
-    visYearSel.appendChild(o);
-  });
-  visYearSel.value = keep && years.has(Number(keep)) ? keep : String(cur.getFullYear());
-  if (!visMonthSel.options.length) {
-    VIS_MONTHS.forEach((name, i) => {
-      const o = document.createElement('option');
-      o.value = String(i + 1); o.textContent = name;
-      visMonthSel.appendChild(o);
-    });
-    visMonthSel.value = String(cur.getMonth() + 1);
-  }
-}
-
 function setVisGranUI(gran) {
   visState.gran = gran;
   document.querySelectorAll('.vis-tab').forEach((btn) => {
@@ -1529,12 +1491,39 @@ function setVisGranUI(gran) {
   });
 }
 
-/* เติมยอดที่เคยบันทึกไว้ลงช่องกรอกเมื่อเลือกปี/เดือน */
-function prefillVisCount() {
-  const y = Number(visYearSel.value), m = Number(visMonthSel.value);
-  const found = visState.visitors.find((v) => v.year === y && v.month === m);
-  visCountInput.value = found ? String(found.visitors) : '';
+/* เดือน/ปีที่จะบันทึก = ตามตัวกรอง "รายเดือน" ด้านบน (ไม่มีช่องเลือกซ้ำในการ์ดนี้) */
+function visSaveTarget() {
+  if (state.granularity !== 'month') return null;
+  const year = Number(yearInput.value), month = Number(monthInput.value);
+  return year && month ? { year, month } : null;
+}
+function visListYear() {
+  if (state.granularity === 'day') {
+    const y = Number((dateToInput.value || '').slice(0, 4));
+    if (y) return y;
+  }
+  return Number(yearInput.value) || new Date().getFullYear();
+}
+let visLastTargetKey = '';
+function updateVisTargetUI(forcePrefill) {
+  const tg = visSaveTarget();
+  if (!tg) {
+    visSaveBtn.disabled = true;
+    visSaveBtn.textContent = '💾 บันทึก';
+    visTargetEl.textContent = 'ถ้าต้องการบันทึกยอดรายเดือน ให้เลือกช่วงเวลาแบบ "รายเดือน" ด้านบนก่อน';
+    visLastTargetKey = '';
+    return;
+  }
+  const key = tg.year + '-' + tg.month;
+  const found = visState.visitors.find((v) => v.year === tg.year && v.month === tg.month);
+  visSaveBtn.disabled = false;
   visSaveBtn.textContent = found ? '💾 บันทึกการแก้ไข' : '💾 บันทึก';
+  visTargetEl.textContent = `ปุ่ม "บันทึก" จะเก็บยอดนี้เป็นยอดของ ${VIS_MONTHS[tg.month - 1]} ${tg.year + 543}` + (found ? ' (เดือนนี้เคยบันทึกไว้แล้ว — บันทึกใหม่จะแทนที่ยอดเดิม)' : '');
+  if (forcePrefill || key !== visLastTargetKey) {
+    visCountInput.value = found ? String(found.visitors) : '';
+    updateVisitorsPerRoll(parseInt(statReturned.textContent, 10) || 0);
+  }
+  visLastTargetKey = key;
 }
 
 async function loadVisitorStats(reloadRolls = true) {
@@ -1563,8 +1552,7 @@ async function loadVisitorStats(reloadRolls = true) {
       visShowMsg('โหลดข้อมูลม้วนไม่สำเร็จ: ' + err.message, true);
     }
   }
-  populateVisSelects();
-  prefillVisCount();
+  updateVisTargetUI(true);
   renderVisitors();
 }
 
@@ -1582,11 +1570,11 @@ function renderVisitors() {
   }
   let html = '';
   if (visState.gran === 'month') {
-    const year = Number(visYearSel.value);
+    const year = visListYear();
     const rows = visState.visitors.filter((v) => v.year === year).sort((a, b) => a.month - b.month);
     visHead.innerHTML = `<tr class="text-muted border-b border-sand">${visTh('เดือน', 'text-left')}${visTh('คนเข้าห้าง (คน)')}${visTh('🧮 เฉลี่ย คน/ม้วน')}<th class="no-print px-3 py-2 text-center font-medium">แก้ไข</th></tr>`;
     if (!rows.length) {
-      visEmpty.textContent = `ยังไม่มียอดคนเข้าห้างของปี ${year + 543} — เลือกเดือนแล้วกรอกจำนวนคนด้านบน`;
+      visEmpty.textContent = `ยังไม่มียอดคนเข้าห้างของปี ${year + 543} — เลือกช่วงเวลา "รายเดือน" แล้วกรอกจำนวนคนในช่องด้านบน`;
       visEmpty.classList.remove('hidden');
       return;
     }
@@ -1618,7 +1606,7 @@ function renderVisitors() {
     const years = Object.keys(byYear).map(Number).sort((a, b) => b - a);
     visHead.innerHTML = `<tr class="text-muted border-b border-sand">${visTh('ปี (พ.ศ.)', 'text-left')}${visTh('เดือนที่บันทึก')}${visTh('คนเข้าห้างรวม (คน)')}${visTh('🧮 เฉลี่ย คน/ม้วน')}<th class="no-print px-3 py-2 text-center font-medium">ดู</th></tr>`;
     if (!years.length) {
-      visEmpty.textContent = 'ยังไม่มียอดคนเข้าห้างที่บันทึกไว้ — เลือกปีและเดือนแล้วกรอกจำนวนคนด้านบน';
+      visEmpty.textContent = 'ยังไม่มียอดคนเข้าห้างที่บันทึกไว้ — เลือกช่วงเวลา "รายเดือน" แล้วกรอกจำนวนคนในช่องด้านบน';
       visEmpty.classList.remove('hidden');
       return;
     }
@@ -1641,12 +1629,10 @@ document.getElementById('visTabs').addEventListener('click', (e) => {
   setVisGranUI(btn.dataset.vgran);
   renderVisitors();
 });
-visYearSel.addEventListener('change', () => { visHideMsg(); prefillVisCount(); renderVisitors(); });
-visMonthSel.addEventListener('change', () => { visHideMsg(); prefillVisCount(); });
-
-visForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
+async function saveVisitors() {
   visHideMsg();
+  const tg = visSaveTarget();
+  if (!tg) { visShowMsg('เลือกช่วงเวลาแบบ "รายเดือน" ด้านบนก่อน แล้วจึงบันทึก', true); return; }
   const raw = visCountInput.value.trim();
   const count = Number(raw);
   if (raw === '' || !Number.isFinite(count) || count < 0 || !Number.isInteger(count)) {
@@ -1654,13 +1640,12 @@ visForm.addEventListener('submit', async (e) => {
     visCountInput.focus();
     return;
   }
-  const year = Number(visYearSel.value), month = Number(visMonthSel.value);
   visSaveBtn.disabled = true;
   try {
     const res = await supaFetch(`${SUPABASE_URL}/rest/v1/${VISITORS_TABLE}?on_conflict=year,month`, {
       method: 'POST',
       headers: supaHeaders({ 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' }),
-      body: JSON.stringify([{ year, month, visitors: count, updated_at: new Date().toISOString() }])
+      body: JSON.stringify([{ year: tg.year, month: tg.month, visitors: count, updated_at: new Date().toISOString() }])
     }, 'บันทึกยอดคนเข้าห้าง');
     if (!res.ok) {
       const errText = await res.text().catch(() => res.statusText);
@@ -1670,24 +1655,34 @@ visForm.addEventListener('submit', async (e) => {
     const saved = await res.json();
     if (!saved.length) throw new Error('ฐานข้อมูลยังไม่อนุญาตให้บันทึก/แก้ไข (ต้องเพิ่ม policy ของตาราง toilet_paper_visitors — ดูไฟล์ visitors-table.sql)');
     await loadVisitorStats(false);
-    visShowMsg(`บันทึกแล้ว: ${VIS_MONTHS[month - 1]} ${year + 543} มีคนเข้าห้าง ${fmtInt(count)} คน`, false);
+    visShowMsg(`บันทึกแล้ว: ${VIS_MONTHS[tg.month - 1]} ${tg.year + 543} มีคนเข้าห้าง ${fmtInt(count)} คน`, false);
   } catch (err) {
     visShowMsg(err.message, true);
   } finally {
-    visSaveBtn.disabled = false;
+    updateVisTargetUI(false);
   }
-});
+}
+visSaveBtn.addEventListener('click', saveVisitors);
+visCountInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !visSaveBtn.disabled) { e.preventDefault(); saveVisitors(); } });
+
+/* ตัวกรองด้านบนเปลี่ยน → อัปเดตเดือนที่จะบันทึก และรายการด้านล่าง */
+function refreshVisitorView() { updateVisTargetUI(false); renderVisitors(); }
+granTabs.addEventListener('click', () => setTimeout(refreshVisitorView, 0));
+[monthInput, yearInput, dateFromInput, dateToInput].forEach((el) => el.addEventListener('change', refreshVisitorView));
 
 visBody.addEventListener('click', async (e) => {
   const edit = e.target.closest('.vis-edit');
   const del = e.target.closest('.vis-del');
   const open = e.target.closest('.vis-open-year');
   if (edit) {
-    visYearSel.value = edit.dataset.y; visMonthSel.value = edit.dataset.m;
-    prefillVisCount();
-    visShowMsg(`กำลังแก้ไข: ${VIS_MONTHS[Number(edit.dataset.m) - 1]} ${Number(edit.dataset.y) + 543} — แก้จำนวนแล้วกด "บันทึกการแก้ไข"`, false);
+    // ตั้งตัวกรองด้านบนเป็นเดือนนั้น แล้วเติมยอดเดิมในช่องกรอกด้านบนให้แก้
+    const y = Number(edit.dataset.y), m = Number(edit.dataset.m);
+    setGranularityUI('month');
+    yearInput.value = String(y); monthInput.value = String(m);
+    updateVisTargetUI(true); renderVisitors(); applyFilters();
+    visShowMsg(`กำลังแก้ไข: ${VIS_MONTHS[m - 1]} ${y + 543} — แก้จำนวนในช่องด้านบนแล้วกด "บันทึกการแก้ไข"`, false);
+    document.getElementById('mallVisitorsInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
     visCountInput.focus(); visCountInput.select();
-    visForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } else if (del) {
     const y = Number(del.dataset.y), m = Number(del.dataset.m);
     if (!confirm(`ลบยอดคนเข้าห้างของ ${VIS_MONTHS[m - 1]} ${y + 543}?`)) return;
@@ -1702,14 +1697,14 @@ visBody.addEventListener('click', async (e) => {
       visShowMsg(`ลบยอดของ ${VIS_MONTHS[m - 1]} ${y + 543} แล้ว`, false);
     } catch (err) { visShowMsg(err.message, true); }
   } else if (open) {
-    visYearSel.value = open.dataset.y;
-    setVisGranUI('month');
-    prefillVisCount();
-    renderVisitors();
+    setGranularityUI('month');
+    yearInput.value = open.dataset.y;
+    updateVisTargetUI(true); setVisGranUI('month'); renderVisitors(); applyFilters();
   }
 });
 
 setVisGranUI('month');
+updateVisTargetUI(true);
 loadVisitorStats();
 
 /* ---------------------------- Init ---------------------------- */
